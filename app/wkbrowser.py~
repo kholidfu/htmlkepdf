@@ -1,0 +1,91 @@
+import sys
+import time
+from urlparse import urlparse
+ 
+from PIL import Image
+ 
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from PyQt4.QtWebKit import *
+ 
+app = QApplication(sys.argv)
+ 
+class SimpleBrowser(QObject):
+ 
+    def __init__(self, url, output):
+        self.url = url
+        self.output = output
+        self.web = QWebView()
+        self.page = self.web.page()
+ 
+        # Disable the scrollbars
+        self.page.mainFrame().setScrollBarPolicy(Qt.Horizontal, Qt.ScrollBarAlwaysOff)
+        self.page.mainFrame().setScrollBarPolicy(Qt.Vertical, Qt.ScrollBarAlwaysOff)
+ 
+        settings = self.web.settings()
+        settings.setAttribute(QWebSettings.PluginsEnabled, True)
+        settings.setAttribute(QWebSettings.JavaEnabled, True)
+        settings.setAttribute(QWebSettings.JavascriptCanOpenWindows, True)
+        settings.setAttribute(QWebSettings.JavascriptCanAccessClipboard, True)
+        settings.setAttribute(QWebSettings.DeveloperExtrasEnabled, True)
+        settings.setAttribute(QWebSettings.ZoomTextOnly, True)
+ 
+        self.web.load(QUrl(url))
+        self.connect(self.page, SIGNAL('loadFinished(bool)'), self.render)
+        self.connect(self.page, SIGNAL('loadStarted()'), self.__on_load_started)
+ 
+    def render(self):
+        frame = self.page.currentFrame()
+        size = frame.contentsSize()
+ 
+        # Expand the width of the frame so that there are no horizontal scrollbar
+        size.setWidth(1280)
+ 
+        self.page.setViewportSize(size)
+        img = QImage(self.page.viewportSize(), QImage.Format_ARGB32)
+ 
+        if img.isNull():
+            print 'Cannot generate image for %s' % (self.url)
+            app.quit()
+            return
+ 
+        paint = QPainter(img)
+        frame.render(paint)
+        paint.end()
+ 
+        if img.save(self.output):
+            print 'Saved to %s' % (self.output)
+            print ''
+        else:
+            print 'Failed to save %s' % (self.output)
+ 
+        if not self.is_blank(self.output):
+            app.quit()
+ 
+    def is_blank(self, filename):
+        """
+        Check the minimum and maximum values of the image. If both are equal to 255,
+        then the image is blank
+        """
+        im = Image.open(filename)
+        bands = im.split()
+ 
+        return all(band.getextrema() == (255, 255) for band in bands)
+ 
+    def __on_load_started(self):
+        print 'started loading'
+ 
+if __name__ == '__main__':
+    if len(sys.argv) == 3:    
+        url = sys.argv[1]
+        output = sys.argv[2]
+ 
+        o = urlparse(url)
+ 
+        if o.scheme:
+            browser = SimpleBrowser(url, output)
+ 
+    else:
+        print 'Usage: python simple.py <url>'
+ 
+    sys.exit(app.exec_())

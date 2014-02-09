@@ -1,0 +1,172 @@
+# author: @sopier
+
+from flask import render_template, request, redirect, send_from_directory
+from flask import make_response # untuk sitemap
+from app import app
+# untuk find_one based on data id => db.freewaredata.find_one({'_id': ObjectId(file_id)})
+# atom feed
+from werkzeug.contrib.atom import AtomFeed
+from bson.objectid import ObjectId 
+from filters import slugify, splitter, onlychars, get_first_part, get_last_part, formattime, cleanurl
+import datetime
+
+import sys
+import time
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from PyQt4.QtWebKit import *
+
+@app.template_filter()
+def slug(s):
+    """ 
+    transform words into slug 
+    usage: {{ string|slug }}
+    """
+    return slugify(s)
+
+@app.template_filter()
+def split(s):
+    """ 
+    split string s with delimiter '-' 
+    return list object
+    usage: {{ string|split }}
+    """
+    return splitter(s, '-')
+
+@app.template_filter()
+def getlast(text, delim=' '):
+    """
+    get last word from string with delimiter ' '
+    usage: {{ string|getlast }}
+    """
+    return get_last_part(text, delim)
+
+@app.template_filter()
+def getfirst(text, delim=' '):
+    """
+    get first word from string with delimiter '-'
+    usage: {{ string|getfirst }}
+    """
+    return get_first_part(text, delim)
+
+@app.template_filter()
+def getchars(text):
+    """
+    get characters and numbers only from string
+    usage: {{ string|getchars }}
+    """
+    return onlychars(text)
+
+@app.template_filter()
+def sectomins(seconds):
+    """
+    convert seconds to hh:mm:ss
+    usage: {{ seconds|sectomins }}
+    """
+    return formattime(seconds)
+
+@app.template_filter()
+def urlcleaner(text):
+    """
+    clean url from string
+    """
+    return cleanurl(text)
+
+# handle robots.txt file
+@app.route("/robots.txt")
+def robots():
+    # point to robots.txt files
+    return send_from_directory(app.static_folder, request.path[1:])
+
+class Screenshot(QWebView):
+    def __init__(self):
+        self.app = QApplication(sys.argv)
+        QWebView.__init__(self)
+        self._loaded = False
+        self.loadFinished.connect(self._loadFinished)
+
+    def capture(self, url, output_file):
+        self.load(QUrl(url))
+        self.wait_load()
+        # set to webpage size
+        frame = self.page().mainFrame()
+        self.page().setViewportSize(frame.contentsSize())
+        # render image
+        image = QImage(self.page().viewportSize(), QImage.Format_ARGB32)
+        painter = QPainter(image)
+        frame.render(painter)
+        painter.end()
+        print 'saving', output_file
+        image.save(output_file)
+
+    def wait_load(self, delay=0):
+        # process app events until page loaded
+        while not self._loaded:
+            self.app.processEvents()
+            time.sleep(delay)
+        self._loaded = False
+
+    def _loadFinished(self, result):
+        self._loaded = True
+
+#s = Screenshot()
+#s.capture('http://www.seloker.com', 'seloker.png')
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+"""
+index:
+  big search form
+
+redirect ke view pdf
+gunakan readability untuk menyimpan snippet dari url
+tombol download pdf
+
+halaman view pdf ini yang kita bikin sitemap terus index kan
+
+database:
+/view/id_dbase
+
+snippet => readability
+string dari pdf yang berhasil di generate
+jadi setiap kali user view, kita tampilkan string tersebut menggunakan flask-weasyprint
+jadi gak usah simpan berkas pdf nya :)
+
+"""
+
+@app.route("/render")
+def render():
+    """ processnya disini ini, mulai dari render sampe insert database """
+    from urllib import unquote
+    query = request.args.get('q')
+    url = unquote(query)
+    return render_template("view.html", query=query)
+
+@app.route("/view/<id>")
+def view(id):
+    """ disini data dipanggil dari database """
+    return render_template("view.html")
+
+@app.route("/sitemap.xml")
+def sitemap():
+    # data = db.freewaredata.find()
+    # sitemap_xml = render_template("sitemap.xml", data=data)
+    # response = make_response(sitemap_xml)
+    # response.headers['Content-Type'] = 'application/xml'
+
+    # return response
+    pass
+
+@app.route('/recent.atom')
+def recent_feed():
+    # http://werkzeug.pocoo.org/docs/contrib/atom/ 
+    # wajibun: id(link) dan updated
+    # feed = AtomFeed('Recent Articles',
+    #                feed_url = request.url, url=request.url_root)
+    # data = datas
+    # for d in data:
+    #    feed.add(d['nama'], content_type='html', id=d['id'], updated=datetime.datetime.now())
+    # return feed.get_response()
+    pass

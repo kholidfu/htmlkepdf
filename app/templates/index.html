@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Konversi HTML ke PDF Online {% endblock %}
+{% block metadesc %}
+<meta name="description" content="Jasa konversi HTML ke PDF gratis, cepat dan mudah">
+{% endblock %}
+{% block content %}
+  <div class="jumbotron">
+    <h1>Konversi HTML ke PDF Online</h1>
+    <p class="lead">
+      Mudah, cepat dan gratis konversi web url ke PDF
+    </p>
+    <a class="btn btn-large btn-success" href="#">Sign up today</a>
+  </div>
+  <hr>
+  <div class="marketing row-fluid">
+    <div class="span12">
+      <h4>Masukkan URL Web:</h4>
+      <div class="input-append">
+	<form method="GET" action="/render">
+	  <input class="span12" id="appendedInputButton" type="text" name="q" placeholder="ex: http://www.google.com">
+	  <button class="btn" type="submit">Convert!</button><br><br>
+	  <p style="font-size: 12px;">Contoh format url: http://www.google.com (lengkap dengan protocol http, https atau ftp)</p>
+	  <p style="font-size: 12px;">Quickstats: <b>{{ numfiles }}</b> files converted so far..</p>
+	</form>
+      </div>
+      <p style="font-size: 12px;">
+	Kami menggunakan <i>real browser</i> untuk meng-emulasi browser, yang berarti juga dukungan penuh terhadap javascript dan flash, sehingga hasil diharapkan nyaris mendekati situs sumbernya.
+      </p>
+    </div>
+  </div>
+
+  <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <!-- htmlkepdf header -->
+  <ins class="adsbygoogle"
+       style="display:inline-block;width:728px;height:90px"
+       data-ad-client="ca-pub-1283473507813224"
+       data-ad-slot="1489128899"></ins>
+  <script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
+
+  <hr>
+<!-- /container -->
+{% endblock %}

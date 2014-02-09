@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}PDF Collections :: {{ title }} {% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+
+{{ url }}<br>
+{{ update }}<br>
+
+<h2>Snippet:</h2>
+<p>{{ article }}<p>
+{{ metadesc }}<br>
+
+<h3>Preview</h3>
+<iframe src="http://docs.google.com/viewer?url=http://www.htmlkepdf.com/view/{{ oid }}&embedded=true" width="100%" height="780" style="border: none;"></iframe>
+
+<h5>{{ filename }}</h5>
+
+{% endblock %}
